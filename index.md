@@ -4,6 +4,11 @@ landing-title: Hi, my name is Ben Steers
 description: 
 image: 
 author: 
+resume_items:
+- title: M.S. Urban Science & Informatics
+  start_date: 2017-01-09 00:00:00 Z
+  end_date: 2018-01-08 00:00:00 Z
+  description: 
 layout: home
 ---
 
