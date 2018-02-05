@@ -11,4 +11,3 @@ layout: resume-item
 image: "/uploads/University-of-Hartford-Low-Res.jpg"
 ---
 
-asfasfasfasf

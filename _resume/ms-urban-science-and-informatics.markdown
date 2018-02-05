@@ -11,4 +11,3 @@ layout: resume-item
 image: "/uploads/nyutandon.jpg"
 ---
 
-asdfaslkfdjalskdf
