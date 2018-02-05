@@ -1,9 +1,5 @@
 ---
 title: Ben Steers
-subtitle: by HTML5 UP
-email: youremailaddress@gmail.com
-description: A responsive site template designed by HTML5 Up<br /> and released under the Creative Commons.
-
 timezone: UTC
 collections:
   posts:
@@ -12,32 +8,13 @@ collections:
   uploads:
     title: Uploads
     output: true
-
-# site settings
-
-# baseurl: "/forty-jekyll-theme" # the subpath of your site, e.g. /blog
-url: "" # the base hostname & protocol for your site
+subtitle: by HTML5 UP
+email: youremailaddress@gmail.com
+description: A responsive site template designed by HTML5 Up<br /> and released under
+  the Creative Commons.
+url: ''
 city: Brooklyn
 state: NY
-
-# homepage tiles
-tiles-source: posts # accepts "posts" or "pages"
+tiles-source: posts
 tiles-count: 6
-
-# social settings
-# 500px_url:
-# facebook_url:
 github_url: https://github.com/bensteers/
-# gitlab_url: 
-# googleplus_url: 
-# instagram_url: 
-# linkedin_url: 
-# pinterest_url:
-# slack_url:
-# twitter_url: 
-
-# # build settings
-# markdown: 
-
-# sass:
-#   style: 
