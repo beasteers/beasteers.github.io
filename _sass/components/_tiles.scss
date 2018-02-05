@@ -6,6 +6,18 @@
 
 /* Tiles */
 
+	.tiles.tiles-title {
+		padding: 1em;
+		font-size: 0.5em;
+		text-transform: uppercase;
+		letter-spacing: 0.6em;
+		opacity: 0.5;
+
+		h1 {
+			margin: 0;
+		}
+	}
+
 	.tiles {
 		@include vendor('display', 'flex');
 		@include vendor('flex-wrap', 'wrap');
@@ -14,6 +26,8 @@
 		& + * {
 			border-top: 0 !important;
 		}
+
+		
 
 		article {
 			@include vendor('align-items', 'center');
@@ -38,6 +52,15 @@
 
 			.image {
 				display: none;
+			}
+
+			.org-logo {
+				z-index: 10;
+				position: absolute;
+				bottom: 0;
+				left: 0;
+				max-width: 120px;
+				max-height: 70px;
 			}
 
 			header {

@@ -1,28 +1,43 @@
-<section id="one" class="tiles">
-	{% for post in site.posts limit:site.tiles-count %}
-	{% if site.tiles-source == 'posts' %}
-        <article>
-                <span class="image">
-                        <img src="{{ post.image }}" alt="" />
-                </span>
-                <header class="major">
-                        <h3><a href="{{ post.url  | relative_url }}" class="link">{{ post.title }}</a></h3>
-                        <p>{{ post.description }}</p>
-                </header>
-        </article>
-	{% endif %}
-	{% endfor %}
-	{% for page in site.pages limit:site.tiles-count %}
-	{% if site.tiles-source == 'pages' %}
+{% if site[site.tiles_source] %}
+{% for category in site.tiles_categories %}
+
+{% if category %}
+<section class="tiles tiles-title">
+        <h1>{{ category | replace: '-',' ' | replace: '_',' ' }}</h1>
+</section>
+{% endif %}
+<section class="tiles">
+
+        {% for page in site[site.tiles_source] limit:site.tiles_count %}
+        {% unless page.categories contains category %}{% continue %}{% endunless %}
+        
+        {% if site.tiles_source == 'resume-item' %}
         <article>
                 <span class="image">
                         <img src="{{ page.image }}" alt="" />
                 </span>
                 <header class="major">
                         <h3><a href="{{ page.url | relative_url  }}" class="link">{{ page.title }}</a></h3>
+                        <p>{{ page.organization }} <b>{{ page.start_date | date: "%b, %Y" }} - {{ page.end_date | date: "%b, %Y" }}</b></p>
                         <p>{{ page.description }}</p>
                 </header>
+                {% if page.organization_logo %}
+                <img  class="org-logo" src="{{ page.organization_logo }}" alt="" />
+                {% endif %}
         </article>
-	{% endif %}
-	{% endfor %}
+
+        {% else %}
+                <article>
+                        <span class="image">
+                                <img src="{{ page.image }}" alt="" />
+                        </span>
+                        <header class="major">
+                                <h3><a href="{{ page.url | relative_url  }}" class="link">{{ page.title }}</a></h3>
+                                <p>{{ page.description }}</p>
+                        </header>
+                </article>
+        {% endif %}
+        {% endfor %}
 </section>
+{% endfor %}
+{% endif %}
