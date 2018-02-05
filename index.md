@@ -5,10 +5,14 @@ description:
 image: 
 author: 
 resume_items:
-- title: M.S. Urban Science & Informatics
-  start_date: 2017-01-09 00:00:00 Z
-  end_date: 2018-01-08 00:00:00 Z
-  description: 
+- title: M.S. Urban Science & Informatics, NYU CUSP
+  start_date: 2017-08-28 00:00:00 Z
+  end_date: 2018-08-01 00:00:00 Z
+  description: akdsjflaksjflaksfdjsalkfdja
+- title: B.S.E. Acoustical Engineering & Music, University of Hartford
+  start_date: 2013-09-02 00:00:00 Z
+  end_date: 2017-05-12 00:00:00 Z
+  description: asl;dfaskfdjlaskfdjalksdf
 layout: home
 ---
 
