@@ -6,7 +6,7 @@ collections:
     title: Posts
     output: true
   resume:
-    title: Resume Item
+    title: Resume
     output: true
   uploads:
     title: Uploads
