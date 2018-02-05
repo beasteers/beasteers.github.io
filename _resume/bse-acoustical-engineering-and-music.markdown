@@ -7,8 +7,8 @@ organization: University of Hartford
 organization_logo: "/uploads/uhalogo.jpg"
 start_date: 2013-09-01 20:00:00 -04:00
 end_date: 2017-05-11 20:00:00 -04:00
-layout: resume-item
 image: "/uploads/University-of-Hartford-Low-Res.jpg"
+color: "#ff0000"
 ---
 
 asfasfasfasf
