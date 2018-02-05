@@ -1,6 +1,8 @@
 ---
 title: B.S.E. Acoustical Engineering & Music
 date: 2018-02-05 04:28:00 Z
+categories:
+- education
 organization: University of Hartford
 organization_logo: "/uploads/uhalogo.jpg"
 start_date: 2013-09-02 00:00:00 Z
