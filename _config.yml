@@ -18,8 +18,11 @@ description: A responsive site template designed by HTML5 Up<br /> and released 
 url: 
 city: Brooklyn
 state: NY
+logo: "/uploads/logo3.png"
+
 tiles-source: resume-item
 tiles-count: 6
+
 github_url: https://github.com/bensteers/
 
 defaults:
@@ -31,3 +34,4 @@ defaults:
       organization_logo: 
       start_date:
       end_date: 
+
