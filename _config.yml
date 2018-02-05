@@ -11,6 +11,15 @@ collections:
   uploads:
     title: Uploads
     output: true
+defaults:
+- scope:
+    path: ''
+    type: resume-item
+  values:
+    organization: 
+    organization_logo: 
+    start_date: 
+    end_date: 
 subtitle: 
 email: ben@bensteers.me
 description: A responsive site template designed by HTML5 Up<br /> and released under
@@ -19,19 +28,6 @@ url:
 city: Brooklyn
 state: NY
 logo: "/uploads/logo3.png"
-
 tiles-source: resume-item
 tiles-count: 6
-
 github_url: https://github.com/bensteers/
-
-defaults:
-  - scope:
-      path: ""
-      type: resume-item
-    values:
-      organization: 
-      organization_logo: 
-      start_date:
-      end_date: 
-
