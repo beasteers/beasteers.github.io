@@ -27,12 +27,10 @@ url:
 city: Brooklyn
 state: NY
 logo: "/uploads/logo3.png"
-
 tiles_source: resume-item
 tiles_categories:
-  - education
-  - work
-  - programming-languages_bvsdc
+- education
+- work
+- programming-languages_bvsdc
 tiles_count: 6
 github_url: https://github.com/bensteers/
-logo: "/uploads/logo3.png"
