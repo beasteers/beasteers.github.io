@@ -7,6 +7,7 @@ organization: New York University
 organization_logo: "/uploads/nyulogo.jpg"
 start_date: 2017-08-27 20:00:00 -04:00
 end_date: 2018-07-31 20:00:00 -04:00
+image: "/uploads/nyutandon.jpg"
 ---
 
 asdfaslkfdjalskdf
