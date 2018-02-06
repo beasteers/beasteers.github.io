@@ -8,5 +8,6 @@ organization_logo: "/uploads/logo-steersstudios.png"
 color: "#ffcc66"
 start_date: 2013-05-01 00:00:00 -04:00
 end_date: Present
+image: "/uploads/ss-bg.jpg"
 ---
 
