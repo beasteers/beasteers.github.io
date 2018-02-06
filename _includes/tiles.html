@@ -26,7 +26,12 @@
                 </span>
                 <header class="major">
                         <h3><a href="{{ page.url | relative_url  }}" class="link">{{ page.title }}</a></h3>
-                        <p>{{ page.organization }} <b>{{ page.start_date | date: "%b, %Y" }} - {{ page.end_date | date: "%b, %Y" }}</b></p>
+                        <p>
+                                {{ page.organization }} 
+                                <b>{{ page.start_date | date: "%b, %Y" }}
+                                {% if page.end_date %} - {{ page.end_date | date: "%b, %Y" }}{% endif %}
+                                </b>
+                         </p>
                         <p>{{ page.description }}</p>
                 </header>
                 {% if page.organization_logo %}
