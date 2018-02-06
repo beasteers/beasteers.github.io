@@ -14,12 +14,22 @@ collections:
 defaults:
 - scope:
     path: ''
-    type: resume-item
+    type: resume
   values:
+    # education, work, projects, skills*
     organization: 
     organization_logo: 
     start_date: 
     end_date: 
+    images:
+    # education
+    courses:
+      - title: 
+        description: 
+        is_featured: 
+    # projects
+    report: 
+
 subtitle: 
 email: ben@bensteers.me
 description: Data Science, Acoustics, Web Development.
@@ -27,10 +37,8 @@ url:
 city: Brooklyn
 state: NY
 logo: "/uploads/logo3.png"
-tiles_source: resume-item
+tiles_source: resume
 tiles_categories:
 - education
-- work
-- programming-languages_bvsdc
 tiles_count: 6
 github_url: https://github.com/bensteers/

@@ -10,9 +10,17 @@
 
         {% for page in site[site.tiles_source] limit:site.tiles_count %}
         {% unless page.categories contains category %}{% continue %}{% endunless %}
+
+        {% if page.color %}
+        <style>
+                #tile-{{ page.slug }}:before {
+                        background-color: {{ page.color }};
+                } 
+        </style>
+        {% endif %}
         
-        {% if site.tiles_source == 'resume-item' %}
-        <article>
+        {% if site.tiles_source == 'resume' %}
+        <article id='tile-{{ page.slug }}'>
                 <span class="image">
                         <img src="{{ page.image }}" alt="" />
                 </span>
@@ -27,7 +35,7 @@
         </article>
 
         {% else %}
-                <article>
+                <article id='tile-{{ page.slug }}'>
                         <span class="image">
                                 <img src="{{ page.image }}" alt="" />
                         </span>

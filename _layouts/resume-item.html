@@ -21,6 +21,7 @@
 	<div class="inner">
 		<header class="major">
 			<h1>{{ page.title }}</h1>
+			<p>{{ page.organization }} <b>{{ page.start_date | date: "%b, %Y" }} - {{ page.end_date | date: "%b, %Y" }}</b></p>
 		</header>
 		{% if page.image %}<span class="image main"><img src="{{ site.baseurl }}{{ page.image }}" alt="" /></span>{% endif %}
 		<p>{{ content }}</p>
