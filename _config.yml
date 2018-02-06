@@ -16,20 +16,16 @@ defaults:
     path: ''
     type: resume
   values:
-    # education, work, projects, skills*
     organization: 
     organization_logo: 
     start_date: 
     end_date: 
-    images:
-    # education
+    images: 
     courses:
-      - title: 
-        description: 
-        is_featured: 
-    # projects
+    - title: 
+      description: 
+      is_featured: 
     report: 
-
 subtitle: 
 email: ben@bensteers.me
 description: Data Science, Acoustics, Web Development.
