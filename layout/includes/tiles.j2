@@ -1,0 +1,118 @@
+{% macro render_tile(title, description, url, image, color, logo) %}
+    {% set slug = title | hash %}
+    <article id='tile-{{ slug }}'>
+        {% if color %}
+        <style>
+            #tile-{{ slug }}:before {
+                    background-color: {{ color }};
+            } 
+        </style>
+        {% endif %}
+
+        <span class="image">
+            {% if image %}
+                <img src="{{ media_url(image) }}" alt="" />
+            {% endif %}
+        </span>
+        <header class="major">
+            <h3>
+                {% if url %}<a href="{{ url }}" class="link">{{ title }}</a>
+                {% else %}{{ title }}{% endif %}
+            </h3>
+            {{ description }}
+        </header>
+        {% if logo %}
+        <img  class="org-logo" src="{{ media_url(logo) }}" alt="" />
+        {% endif %}
+    </article>
+{% endmacro %}
+
+{% macro render_page_tile(meta, url) %}
+    {% set description %}
+    <p><b>{{ meta.organization }}</b> {{ meta.description }}</p>
+    {% endset %}
+    {{ render_tile(
+        title=meta.title,
+        description=description,
+        url=url,
+        image=meta.image,
+        color=meta.color,
+        logo=meta.organization_logo
+    ) }}
+{% endmacro %}
+
+{% macro render_resume_tile(meta, url) %}
+    {% set description %}
+    <p>
+        {{ meta.organization }} 
+        <b>{{ meta.start_date |  date_format('%b, %Y') }}
+        {% if meta.end_date %} - {{ meta.end_date | date_format('%b, %Y') }}{% endif %}
+        </b>
+    </p>
+    <h6>{{ meta.description }}</h6>
+    {% endset %}
+    {{ render_tile(
+        title=meta.title,
+        description=description,
+        url=url,
+        image=meta.image,
+        color=meta.color,
+        logo=meta.organization_logo
+    ) }}
+{% endmacro %}
+
+{% macro render_tile_title(title) %}
+    <section class="tiles tiles-title">
+            <h1>{{ title | replace('-', ' ') | replace('_', ' ') }}</h1>
+    </section>
+{% endmacro %}
+
+
+{% macro render_tiles(tiles) %}
+{# Get tiles from list or from source #}
+{% set thetiles = [] %} {# holds the full list of tiles #}
+{% if tiles.source %}
+    {% set source = site.content.node_from_relative_path(tiles.source) %}
+    {% set thetiles = source.walk_resources()|list if source else [] %}
+{% endif %}
+{% if tiles._ %}
+    {% set thetiles = thetiles + tiles._|list %}
+{% endif %}
+
+{% if thetiles %}
+    {# draw tile title #}
+    {% if tiles.title %}
+        {{ render_tile_title(tiles.title) }}
+    {% endif %}
+    
+    {# draw categories #}
+    {% set categories = tiles.categories or [None] %}
+    {% for category in categories %}
+
+        {# draw category title #}
+        {% if category %}
+            {{ render_tile_title(category) }}
+        {% endif %}
+        
+        {# draw tiles #}
+        <section class="tiles">
+        {% set i = 1 %}
+        {% for tile in thetiles %}
+            {% set meta = tile.meta if tile.meta else tile %} {# pull out meta from resource #}
+            {% if tiles.count and i > tiles.count %}{% break %}{% endif %} {# limit # of tiles #}
+            {% if category and not category in meta.categories %}{% continue %}{% endif %} {# filter out categories #}
+            {% set i = i + 1 %} {# only count the printed ones, no enumerate :( #}
+            
+            {# print specific tile template #}
+            {% if tiles.source == 'resume' %}
+                {{ render_resume_tile(meta, tile.full_url) }}
+            {% else %}
+                {{ render_page_tile(meta, tile.full_url) }}
+            {% endif %}
+            
+        {% endfor %}
+        </section>
+
+    {% endfor %}
+{% endif %}
+{% endmacro %}

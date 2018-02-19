@@ -1,0 +1,63 @@
+mode: development
+plugins:
+    - plugins.css.SassPlugin
+    - plugins.custom.CustomizeJinja2Plugin
+    - hyde.ext.plugins.meta.MetaPlugin
+    - hyde.ext.plugins.meta.AutoExtendPlugin
+    - hyde.ext.plugins.meta.SorterPlugin
+    - hyde.ext.plugins.meta.TaggerPlugin
+    - hyde.ext.plugins.text.SyntextPlugin
+    - hyde.ext.plugins.text.TextlinksPlugin
+context:
+    data:
+        menu:
+            -
+                name: Home
+                type: page
+                url: /
+            -
+                name: Resume
+                type: page
+                url: /resume
+            -
+                name: Github
+                type: button
+                icon: github
+                url: https://github.com/bensteers
+            
+meta:
+    title: Ben Steers
+    logo: uploads/logo3.png
+    favicon: uploads/favicon.ico
+    default_block: content
+
+    author: Ben Steers
+    email: ben@bensteers.me
+    city: Brooklyn
+    state: NY
+
+    github_url: https://github.com/bensteers/
+    linkedin_url:
+sass:
+    files:
+        - media/css/*
+    includes: 
+        - sass/
+# sorter:
+#     time:
+#         attr:
+#             - meta.created
+#         reverse: true
+#         filters:
+#             source.kind: html
+#             meta.listable: true
+# tagger:
+#     sorter: time
+#     archives:
+#         blog:
+#             source: blog
+#             target: blog/tags
+#             template: tagged_posts.j2
+#             archive_extension: html
+#             meta:
+#                 listable: false

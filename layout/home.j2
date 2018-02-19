@@ -1,0 +1,52 @@
+{% extends 'base.j2' %}
+
+{% block style %}
+{% if resource.meta.image %}
+<style>
+    #banner {
+        background-image: url('{{ media_url(resource.meta.image) }}');
+    }
+</style>
+{% endif %}
+{% endblock %}
+
+{% block banner %}
+<section id="banner" class="major">
+    <div class="inner">
+        <header class="major">
+            {% block page_title %}
+                <h1>{{ resource.meta.title }}</h1>
+            {% endblock %}
+        </header>
+        <div class="content">
+            {% block page_description %}
+                <p style="text-transform: uppercase;">{{ resource.meta.description }}</p>
+            {% endblock %}
+        </div>
+    </div>
+</section>
+
+
+{% if resource.meta.image %}
+<style>
+    #banner {
+        background-image: url('{{ media_url(resource.meta.image) }}');
+    }
+</style>
+{% endif %}
+{% endblock %}
+
+
+{% block main %}
+    {{ super() }}
+
+    {# {% include 'includes/tiles.j2' %} #}
+    {% if resource.meta.tiles|is_list %}
+        {% for tile in resource.meta.tiles %}
+            {{ render_tiles(tile) }}
+        {% endfor %}
+    {% else %}
+        {{ render_tiles(resource.meta.tiles) }}
+    {% endif %}
+    
+{% endblock %}

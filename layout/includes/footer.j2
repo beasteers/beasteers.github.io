@@ -1,0 +1,118 @@
+<!-- Contact -->
+<section id="contact">
+	<div class="inner">
+		<section>
+			<form action="https://formspree.io/{{ resource.meta.email }}" method="POST">
+				<div class="field half first">
+					<label for="name">Name</label>
+					<input type="text" name="name" id="name" />
+				</div>
+				<div class="field half">
+					<label for="email">Email</label>
+					<input type="text" name="_replyto" id="email" />
+				</div>
+				<div class="field">
+					<label for="message">Message</label>
+					<textarea name="message" id="message" rows="6"></textarea>
+				</div>
+				<ul class="actions">
+					<li><input type="submit" value="Send Message" class="special" /></li>
+					<li><input type="reset" value="Clear" /></li>
+				</ul>
+			</form>
+		</section>
+		<section class="split">
+			{% if resource.meta.email %}
+			<section>
+				<div class="contact-method">
+					<span class="icon alt fa-envelope"></span>
+					<h3>Email</h3>
+					<a href="#">{{ resource.meta.email }}</a>
+				</div>
+			</section>
+			{% endif %}
+			{% if resource.meta.phone %}
+			<section>
+				<div class="contact-method">
+					<span class="icon alt fa-phone"></span>
+					<h3>Phone</h3>
+					<span>{{ resource.meta.phone }}</span>
+				</div>
+			</section>
+			{% endif %}
+			<section>
+				<div class="contact-method">
+					<span class="icon alt fa-home"></span>
+					<h3>Address</h3>
+					<span>
+					{% if resource.meta.street_address %}
+					    {{ resource.meta.street_address }}<br />
+					{% endif %}
+					{% if resource.meta.city %}
+					    {{ resource.meta.city }},
+					{% endif %}
+					{% if resource.meta.state %}
+					    {{ resource.meta.state }} 
+					{% endif %}
+					{% if resource.meta.zip_code %}
+					    {{ resource.meta.zip_code }}<br />
+					{% endif %}
+					{% if resource.meta.country %}
+					    {{ resource.meta.country }}
+					{% endif %}
+					</span>
+				</div>
+			</section>
+		</section>
+	</div>
+</section>
+
+<!-- Footer -->
+	<footer id="footer">
+		<div class="inner">
+			<ul class="icons">
+				{% if resource.meta.twitter_url %}
+				<li><a href="{{ resource.meta.twitter_url }}" class="icon alt fa-twitter" target="_blank"><span class="label">Twitter</span></a></li>
+				{% endif %}
+				{% if resource.meta.googleplus_url %}
+				<li><a href="{{ resource.meta.googleplus_url }}" class="icon alt fa-google-plus" target="_blank"><span class="label">Google+</span></a></li>
+				{% endif %}
+				{% if resource.meta.facebook_url %}
+				<li><a href="{{ resource.meta.facebook_url }}" class="icon alt fa-facebook" target="_blank"><span class="label">Facebook</span></a></li>
+				{% endif %}
+				{% if resource.meta.instagram_url %}
+				<li><a href="{{ resource.meta.instagram_url }}" class="icon alt fa-instagram" target="_blank"><span class="label">Instagram</span></a></li>
+				{% endif %}
+				{% if resource.meta.pinterest_url %}
+				<li><a href="{{ resource.meta.pinterest_url }}" class="icon alt fa-pinterest" target="_blank"><span class="label">Pinterest</span></a></li>
+				{% endif %}
+				{% if resource.meta.gitlab_url %}
+				<li><a href="{{ resource.meta.gitlab_url }}" class="icon alt fa-gitlab" target="_blank"><span class="label">GitLab</span></a></li>
+				{% endif %}
+				{% if resource.meta.github_url %}
+				<li><a href="{{ resource.meta.github_url }}" class="icon alt fa-github" target="_blank"><span class="label">GitHub</span></a></li>
+				{% endif %}
+				{% if resource.meta.slack_url %}
+				<li><a href="{{ resource.meta.slack_url }}" class="icon alt fa-slack" target="_blank"><span class="label">Slack</span></a></li>
+				{% endif %}
+				{% if resource.meta.linkedin_url %}
+				<li><a href="{{ resource.meta.linkedin_url }}" class="icon alt fa-linkedin" target="_blank"><span class="label">LinkedIn</span></a></li>
+				{% endif %}
+			</ul>
+			<ul class="copyright">
+				<li>&copy; {{ site.meta.title }} {{ site.meta.subtitle }}</li>
+				<li>Design: <a href="https://html5up.net" target="_blank">HTML5 UP</a></li>
+			</ul>
+		</div>
+	</footer>
+
+</div>
+
+<!-- Scripts -->
+	<script src="{{ media_url('js/jquery.min.js') }}"></script>
+	<script src="{{ media_url('js/jquery.scrolly.min.js') }}"></script>
+	<script src="{{ media_url('js/jquery.scrollex.min.js') }}"></script>
+	<script src="{{ media_url('js/skel.min.js') }}"></script>
+	<script src="{{ media_url('js/util.js') }}"></script>
+	<!--[if lte IE 8]><script src="{{ media_url('js/ie/respond.min.js') }}"></script><![endif]-->
+	<script src="{{ media_url('js/main.js') }}"></script>

@@ -1,0 +1,33 @@
+{% extends 'home.j2' %}
+
+{% block banner %}
+<section id='banner'>
+    <div class="inner">
+        <header class="major">
+            <h1>{{ resource.meta.title }}</h1>
+            <p>
+                {% if resource.meta.organization_url %}
+                    <a href='{{ resource.meta.organization_url }}' class='button'>{{ resource.meta.organization }}</a>&nbsp;&nbsp;
+                {% else %}{{ resource.meta.organization }}{% endif %}
+                
+                <b>{{ resource.meta.start_date | date_format('%b, %Y') }}
+                {% if resource.meta.end_date %} - {{ resource.meta.end_date | date_format('%b, %Y') }}{% endif %}
+                </b>
+            </p>
+        </header>
+        {# {% if resource.meta.image %}<span class="image main"><img src="{{ media_url(resource.meta.image) }}" alt="" /></span>{% endif %} #}
+    </div>
+    {# <span class="image">
+        {% if resource.meta.image %}
+            <img src="{{ media_url(resource.meta.image) }}" alt="" />
+        {% endif %}
+    </span> #}
+</section>
+
+
+{% endblock %}
+
+
+{% block main %}
+    {{ super() }}
+{% endblock %}

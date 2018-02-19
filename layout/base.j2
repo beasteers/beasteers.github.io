@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ site.meta.title }}</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <link rel="shortcut icon" href="{{ media_url(site.meta.favicon) }}" type="image/x-icon">
+    <link rel="icon" href="{{ media_url(site.meta.favicon) }}" type="image/x-icon">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <!--[if lte IE 8]><script src="{{ media_url('js/ie/html5shiv.js') }}"></script><![endif]-->
+    <link rel="stylesheet" href="{{ media_url('css/main.css') }}" />
+    <!--[if lte IE 9]><link rel="stylesheet" href="{{ media_url('css/ie9.css') }}" /><![endif]-->
+    <!--[if lte IE 8]><link rel="stylesheet" href="{{ media_url('css/ie8.css') }}" /><![endif]-->
+    {% block style %}{% endblock %}
+</head>
+
+<body>
+    {% from 'includes/tiles.j2' import render_tiles with context %}
+    {% block header %}
+        {% include 'includes/header.j2' %}
+    {% endblock %}
+    {{ title }}
+    {% block banner %}{% endblock %}
+    
+    {% block main %}
+    <div id="main">
+        <section>
+            <div class="inner">
+                {# <header class="major">
+                    
+                </header> #}
+                {# <p>{{ content }}</p> #}
+                {% block content %}{% endblock %}
+            </div>
+        </section>
+        
+    </div>
+    {% endblock %}
+
+    {% block footer %}
+        {% include 'includes/footer.j2' %}
+    {% endblock %}
+
+</body>
+</html>
