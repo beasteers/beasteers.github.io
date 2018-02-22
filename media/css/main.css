@@ -1160,7 +1160,7 @@ header.major {
   header.major > :first-child {
     margin-bottom: 0;
     width: calc(100% + 0.5em); }
-    header.major > :first-child:after {
+    header.major > :first-child:not(.no-underline):after {
       content: '';
       background-color: #ffffff;
       display: block;
