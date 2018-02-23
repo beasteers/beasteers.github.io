@@ -21,6 +21,8 @@ var wave_equation = function(params) {
     FA: 500, // amplitude of max force
 //     E: 0.1, // modulus of elasticity
 //     l0: 0.1, // static deflection
+    // r_2: 0.07111111111111111,
+
     
     k: 0, // the index (0|1) for the current timestep in u_k in U
     state: function(){ return this.U[o.k]; },
@@ -40,17 +42,12 @@ var wave_equation = function(params) {
       return this;
     },
     
-//     frequency: function(o){
-//       return ;
-//     },
-    
     update: function(data){
       Object.assign(this, data);
       // the distance between consecutive pts
       o.dx = o.L / o.N;
       // courant number
-      o.r_2 = Math.pow(o.T0 / o.rho * o.dt / o.dx, 2);
-      
+      o.r_2 = Math.min(0.9999, Math.pow(o.T0 / o.rho * o.dt / o.dx, 2));
       return this;
     },
     
@@ -63,10 +60,10 @@ var wave_equation = function(params) {
       for(var n = 1; n < o.N - 1; n++){
         // update u_k+1
         this.U[+!o.k][n] = ( 
-          2*(1 - o.r_2) * uk[n] + o.r_2 * (uk[n+1] + uk[n-1]) - 
-         (1 - 2*o.beta*o.dt) * ukm1[n] + 
-         o.FA*(force ? force[n] : 0) * Math.pow(o.dt, 2) 
-        ) / (1 + 2*o.beta*o.dt);
+          2*(1 - o.r_2) * uk[n] + o.r_2 * (uk[n+1] + uk[n-1]) - // change due to the curvature of the string
+         (1 - 2*o.beta*o.dt) * ukm1[n] + // relation to the last time step
+         o.FA*(force ? force[n] : 0) * Math.pow(o.dt, 2) // force added to the system
+        ) / (1 + 2*o.beta*o.dt); // decay
       }
       this.k  = +!o.k; // swaps the index between the two arrays
       // return u_k+1
@@ -74,6 +71,7 @@ var wave_equation = function(params) {
     },
     
     run: function(callback){
+      // run the wave function at interval dt, passing the calculated state to a callback function
       var o = this; // for inside function
       var func = function(){ callback(o.next()); };
       this.interval = setInterval(func, o.dt * 1000);
@@ -81,11 +79,12 @@ var wave_equation = function(params) {
     },
     
     stop: function(){
+      // stops the equation loop
       clearInterval(this.interval);
     }
   };
   
-  // initial conditions
+  // initial conditions fx is initial position, gx is initial velocity
   o.fx0 = o.fx0 || new Array(o.N).fill(0).map(function(d, i){
     return pulse(10, i, 10, 20) * Math.sin(30*2*Math.PI * i / o.N);
   });
@@ -100,6 +99,7 @@ var wave_equation = function(params) {
 
 
 function create_wave(selector, o, params){
+  // default parameters
   o = Object.assign({
     width: 900,
     height: 500,
@@ -107,12 +107,14 @@ function create_wave(selector, o, params){
     stroke_width: 3
   }, o);
 
+  // generate wave equation
   var wave = wave_equation(params);
   console.log(wave);
 
+  // draw canvas
   var container = d3.select(selector);
   var svg = container.append('svg')
-  //   .attr('width', width)
+    .attr('width', o.width)
     .attr('height', o.height)
     .attr("viewBox", "0 0 "+o.width + ' ' + o.height)
     .attr("preserveAspectRatio", "xMidYMid meet")
@@ -131,27 +133,25 @@ function create_wave(selector, o, params){
           .clamp(true)
           .domain([-350, 350])
           .range([(o.height - o.amplitude)/2, o.height - (o.height - o.amplitude)/2]);
+  
   // function to create line from data
   var line = d3.line()
     .x(function(d,i) {return x(i);})
     .y(function(d) {return y(d);})
     .curve(d3.curveNatural);
 
-  // var t = svg.append('text').attr('x', 10).attr('y', 0).text('hi').style('font-size', 30)
 
-
+  // calculating force added to system based on mouse click position
   var force = new Array(wave.N).fill(0);
-
   svg.on('mousedown', function(){
     var pos = d3.mouse(svg.node());
     var horizontal = y(0);
     force = wave.state().map(function(pt, i){
-      var amp = 2*(pos[1] - horizontal) * o.amplitude / o.height;
-      return pulse(amp, x(i), pos[0], o.width / 20);
-      // return 2*(pos[1] - horizontal) * o.amplitude / o.height * Math.exp(-Math.pow((x(i) - pos[0]) / o.width * 20, 2));
+      return pulse(2*(pos[1] - horizontal) * o.amplitude / o.height, x(i), pos[0], o.width / 20);
     });
   })
   svg.on('mouseup', function(){
+    // remove the force applied after 100ms. this makes clicks slightly longer
     setTimeout(function(){
       force = null;
     }, 100)
@@ -159,9 +159,9 @@ function create_wave(selector, o, params){
 
 
 
-  var t = d3.select('#banner header').append('p')
+  // var t = d3.select('#banner header').append('p')
 
-
+  // register function to retrieve force
   wave.update({
     force: function(){
       return force;
@@ -170,12 +170,11 @@ function create_wave(selector, o, params){
 
   wave.run(function(state){
     // update line
-    // console.time('Function #1');
+    // var start = window.performance.now();
     string.attr('d', line(state));
-    // console.timeEnd('Function #1')
+    // t.text((window.performance.now() - start).toFixed(6));
   });
 
   return wave;
 }
-
 
