@@ -12,13 +12,13 @@ function pulse(amplitude, x, mu, sigma){
 
 var wave_equation = function(params) {
   var o = {
-    beta: 5, // damping constant ish
-    dt: 0.0002, // timestep
-    T0: 10, // free tension
-    rho: 0.5, // mass per unit length
+    beta: 1, // damping constant ish
+    dt: 0.001,//0.0002, // timestep
+    T0: 20, // free tension
+    rho: 3, // mass per unit length
     N: 40, // number of elements to model with
     L: 1, // length of string
-    FA: 10000, // amplitude of max force
+    FA: 500, // amplitude of max force
 //     E: 0.1, // modulus of elasticity
 //     l0: 0.1, // static deflection
     
@@ -64,7 +64,8 @@ var wave_equation = function(params) {
         // update u_k+1
         this.U[+!o.k][n] = ( 
           2*(1 - o.r_2) * uk[n] + o.r_2 * (uk[n+1] + uk[n-1]) - 
-         (1 - 2*o.beta*o.dt) * ukm1[n] + o.FA*(force ? force[n] : 0) * Math.pow(o.dt, 2)
+         (1 - 2*o.beta*o.dt) * ukm1[n] + 
+         o.FA*(force ? force[n] : 0) * Math.pow(o.dt, 2) 
         ) / (1 + 2*o.beta*o.dt);
       }
       this.k  = +!o.k; // swaps the index between the two arrays
@@ -102,14 +103,15 @@ function create_wave(selector, o, params){
   o = Object.assign({
     width: 900,
     height: 500,
-    amplitude: 400,
+    amplitude: 500,
     stroke_width: 3
   }, o);
 
   var wave = wave_equation(params);
   console.log(wave);
 
-  var svg = d3.select(selector).append('svg')
+  var container = d3.select(selector);
+  var svg = container.append('svg')
   //   .attr('width', width)
     .attr('height', o.height)
     .attr("viewBox", "0 0 "+o.width + ' ' + o.height)
@@ -127,7 +129,7 @@ function create_wave(selector, o, params){
   var x = d3.scaleLinear().domain([0, wave.N-1]).range([0, o.width]);
   var y = d3.scaleLinear()
           .clamp(true)
-          .domain([-200, 200])
+          .domain([-350, 350])
           .range([(o.height - o.amplitude)/2, o.height - (o.height - o.amplitude)/2]);
   // function to create line from data
   var line = d3.line()
@@ -157,6 +159,8 @@ function create_wave(selector, o, params){
 
 
 
+  var t = d3.select('#banner header').append('p')
+
 
   wave.update({
     force: function(){
@@ -166,7 +170,9 @@ function create_wave(selector, o, params){
 
   wave.run(function(state){
     // update line
+    // console.time('Function #1');
     string.attr('d', line(state));
+    // console.timeEnd('Function #1')
   });
 
   return wave;
