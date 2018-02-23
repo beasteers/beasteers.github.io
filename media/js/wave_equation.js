@@ -1,15 +1,3 @@
-function softmax(x, max=0, degree=1){
-  return Math.log((Math.exp(x*degree) + Math.exp(max*degree)) / 2) / degree;
-}
-
-function softmin(x, min, degree=1){
-  return -softmax(-x, -min, degree);
-}
-
-function pulse(amplitude, x, mu, sigma){
-  return amplitude * Math.exp(-Math.pow((x - mu) / sigma, 2))
-}
-
 var wave_equation = function(params) {
   var o = {
     beta: 1, // damping constant ish
@@ -55,15 +43,14 @@ var wave_equation = function(params) {
       var o = this;
       var uk = o.U[o.k]; // the current state
       var ukm1 = o.U[+!o.k]; // previous time step
-      var force = this.net_force(); // the forcing function
-      
+
       this.energy = 0;
       for(var n = 1; n < o.N - 1; n++){
         // update u_k+1
         this.U[+!o.k][n] = ( 
           2*(1 - o.r_2) * uk[n] + o.r_2 * (uk[n+1] + uk[n-1]) - // change due to the curvature of the string
          (1 - 2*o.beta*o.dt) * ukm1[n] + // relation to the last time step
-         o.FA*(force[n]) * Math.pow(o.dt, 2) // force added to the system
+         o.FA*(o.net_force[n]) * Math.pow(o.dt, 2) // force added to the system
         ) / (1 + 2*o.beta*o.dt); // decay
 
         this.energy += Math.pow(this.U[+!o.k][n], 2) + Math.pow((this.U[o.k][n] - this.U[+!o.k][n]) / o.dt, 2) / 2;
@@ -76,37 +63,64 @@ var wave_equation = function(params) {
       return this.U[+!o.k];
     },
 
-    forces: {},
-    _net_force: null,
+    forces: {}, // stores an object of id => force with any 
+    net_force: null, // 
     apply_force: function(id, force) {
-      this.forces[id] = force;
-      if(force && !this.interval)
+      var o = this;
+      // remove previous force from the net force
+      var prev_force = this.forces[id];
+      if(prev_force && prev_force.length == o.N)
+        prev_force.forEach(function(f, i){
+          if(f) // ignore nans, nulls
+            o.net_force[i] -= f;
+        });
+
+      // add in new force
+      if(force && force.length == o.N)
+        force.forEach(function(f, i){
+          if(f) // ignore nans, nulls
+            o.net_force[i] += f;
+        });
+      this.forces[id] = force; // register force under `id`
+      if(force && !this.interval) // if stopped + new excitation, run
         this.run();
       return this;
     },
 
-    net_force: function(){
-      return Object.values(this.forces).reduce(function(sum, force){
-        if(force)
+    recalculate_net_force: function(){
+      // sum all forces applied on the string
+      this.net_force = Object.values(this.forces).reduce(function(sum, force){
+        if(force && force.length == o.N)
           force.forEach(function(f, i){
             if(f)
               sum[i] += f;
           });
         return sum;
-      }, this._net_force.fill(0));
+      }, this.net_force.fill(0));
+      return this.net_force;
     },
     
+    pre_run_func: null,
+    pre_run: function(callback){
+      this.pre_run_func = callback;
+    },
+    
+    run_func: null, // runs the next step in function and passes to callback function 
     run: function(callback){
       // run the wave function at interval dt, passing the calculated state to a callback function
-      var o = this; // for inside run function
-      if(callback){
-        this.run_func = function(){ callback(o.next()); };
-      }
-      else if(!this.run_func){
-        this.run_func = function(){ console.log(o.next()); };
-      }
-      this.interval = setInterval(this.run_func, o.dt * 1000);
-      this.run_func();
+      var o = this;
+      // if new callback, overwrite the last one. this.run() to run previous callback
+      this.callback = callback || this.callback || console.log; 
+      
+      // run  every dt seconds
+      if(this.interval)
+        this.stop();
+      this.interval = setInterval(function(){
+        if(o.pre_run_func)
+          o.pre_run_func(o.state(), o);
+        o.callback(o.next(), o);
+      }, o.dt * 1000); // to ms
+      console.log('starting calculation')
       return this;
     },
 
@@ -114,6 +128,7 @@ var wave_equation = function(params) {
       // stops the equation loop
       clearInterval(this.interval);
       this.interval = null;
+      console.log('stopping calculation')
       return this;
     },
 
@@ -126,7 +141,7 @@ var wave_equation = function(params) {
   // initial conditions fx is initial position, gx is initial velocity
   o.fx0 = o.fx0 || new Array(o.N).fill(0).map(function(d, i){
     // default to a gaussian * 30cpL sin wave
-    return pulse(10, i, 10, 20) * Math.sin(30*2*Math.PI * i / o.N);
+    return gaussian(i, mu=10, sigma=20, amplitude=10) * Math.sin(30*2*Math.PI * i / o.N);
   });
   o.gx0 = o.gx0 || new Array(o.N).fill(0);
   
@@ -136,7 +151,7 @@ var wave_equation = function(params) {
     new Array(o.N).fill(0)
   ];
 
-  o._net_force = new Array(o.N).fill(0);
+  o.net_force = new Array(o.N).fill(0);
   
   return o.update(params || {}).init();
 }
@@ -176,7 +191,7 @@ function create_wave(selector, o, params){
   var y = d3.scaleLinear()
           .clamp(true)
           .domain([-350, 350])
-          .range([(o.height - o.amplitude)/2, o.height - (o.height - o.amplitude)/2]);
+          .range([o.height - (o.height - o.amplitude)/2, (o.height - o.amplitude)/2]);
   
   // function to create line from data
   var line = d3.line()
@@ -190,7 +205,7 @@ function create_wave(selector, o, params){
     var pos = d3.mouse(svg.node());
     var horizontal = y(0);
     var force = wave.state().map(function(pt, i){
-      return pulse(2*(pos[1] - horizontal) * o.amplitude / o.height, x(i), pos[0], o.width / 20);
+      return gaussian(x(i), pos[0], o.width / 20, 2*(horizontal - pos[1]) * o.amplitude / o.height);
     });
     wave.apply_force('mouse', force);
   })
@@ -201,7 +216,7 @@ function create_wave(selector, o, params){
     }, 100)
   });
 
-
+  wave.apply_force('gravity', -1);
 
   var t = d3.select('#banner header').append('p')
 
@@ -210,9 +225,34 @@ function create_wave(selector, o, params){
     // var start = window.performance.now();
     string.attr('d', line(state));
     // t.text((window.performance.now() - start).toFixed(6));
-    t.text(Math.log10(wave.energy));
+    // t.text(Math.log10(wave.energy));
   });
 
   return wave;
 }
+
+
+
+
+function softmax(x, max=0, degree=1){
+  return Math.log(Math.exp(x*degree) + Math.exp(max*degree)) / degree;
+}
+
+function softmin(x, min=0, degree=1){
+  return -softmax(-x, -min, degree);
+}
+
+function softmax0(x, min=0, degree=1){
+  return x > 0 ? softmax(x, min, degree) : softmin(x, min);
+}
+
+function softmin0(x, min=0, degree=1){
+  return x > 0 ? softmin(x, min, degree) : softmax(x, min);
+}
+
+function gaussian(x, mu=0, sigma=1, amplitude=1){
+  return amplitude * Math.exp(-Math.pow((x - mu) / sigma, 2))
+}
+
+
 
