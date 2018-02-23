@@ -55,44 +55,88 @@ var wave_equation = function(params) {
       var o = this;
       var uk = o.U[o.k]; // the current state
       var ukm1 = o.U[+!o.k]; // previous time step
-      var force = o.force ? o.force() : null; // the forcing function
+      var force = this.net_force(); // the forcing function
       
+      this.energy = 0;
       for(var n = 1; n < o.N - 1; n++){
         // update u_k+1
         this.U[+!o.k][n] = ( 
           2*(1 - o.r_2) * uk[n] + o.r_2 * (uk[n+1] + uk[n-1]) - // change due to the curvature of the string
          (1 - 2*o.beta*o.dt) * ukm1[n] + // relation to the last time step
-         o.FA*(force ? force[n] : 0) * Math.pow(o.dt, 2) // force added to the system
+         o.FA*(force[n]) * Math.pow(o.dt, 2) // force added to the system
         ) / (1 + 2*o.beta*o.dt); // decay
+
+        this.energy += Math.pow(this.U[+!o.k][n], 2) + Math.pow((this.U[o.k][n] - this.U[+!o.k][n]) / o.dt, 2) / 2;
       }
+      if(Math.log10(this.energy) < 3)
+        this.stationary().stop();
+
       this.k  = +!o.k; // swaps the index between the two arrays
       // return u_k+1
       return this.U[+!o.k];
     },
+
+    forces: {},
+    _net_force: null,
+    apply_force: function(id, force) {
+      this.forces[id] = force;
+      if(force && !this.interval)
+        this.run();
+      return this;
+    },
+
+    net_force: function(){
+      return Object.values(this.forces).reduce(function(sum, force){
+        if(force)
+          force.forEach(function(f, i){
+            if(f)
+              sum[i] += f;
+          });
+        return sum;
+      }, this._net_force.fill(0));
+    },
     
     run: function(callback){
       // run the wave function at interval dt, passing the calculated state to a callback function
-      var o = this; // for inside function
-      var func = function(){ callback(o.next()); };
-      this.interval = setInterval(func, o.dt * 1000);
-      func();
+      var o = this; // for inside run function
+      if(callback){
+        this.run_func = function(){ callback(o.next()); };
+      }
+      else if(!this.run_func){
+        this.run_func = function(){ console.log(o.next()); };
+      }
+      this.interval = setInterval(this.run_func, o.dt * 1000);
+      this.run_func();
+      return this;
     },
-    
+
     stop: function(){
       // stops the equation loop
       clearInterval(this.interval);
+      this.interval = null;
+      return this;
+    },
+
+    stationary: function(){
+      this.U[o.k].fill(0);
+      return this;
     }
   };
   
   // initial conditions fx is initial position, gx is initial velocity
   o.fx0 = o.fx0 || new Array(o.N).fill(0).map(function(d, i){
+    // default to a gaussian * 30cpL sin wave
     return pulse(10, i, 10, 20) * Math.sin(30*2*Math.PI * i / o.N);
   });
   o.gx0 = o.gx0 || new Array(o.N).fill(0);
+  
+  // storage for u_k and u_k-1
   o.U = [
     new Array(o.N).fill(0),
     new Array(o.N).fill(0)
   ];
+
+  o._net_force = new Array(o.N).fill(0);
   
   return o.update(params || {}).init();
 }
@@ -142,37 +186,31 @@ function create_wave(selector, o, params){
 
 
   // calculating force added to system based on mouse click position
-  var force = new Array(wave.N).fill(0);
   svg.on('mousedown', function(){
     var pos = d3.mouse(svg.node());
     var horizontal = y(0);
-    force = wave.state().map(function(pt, i){
+    var force = wave.state().map(function(pt, i){
       return pulse(2*(pos[1] - horizontal) * o.amplitude / o.height, x(i), pos[0], o.width / 20);
     });
+    wave.apply_force('mouse', force);
   })
   svg.on('mouseup', function(){
     // remove the force applied after 100ms. this makes clicks slightly longer
     setTimeout(function(){
-      force = null;
+      wave.apply_force('mouse', null);
     }, 100)
   });
 
 
 
-  // var t = d3.select('#banner header').append('p')
-
-  // register function to retrieve force
-  wave.update({
-    force: function(){
-      return force;
-    }
-  })
+  var t = d3.select('#banner header').append('p')
 
   wave.run(function(state){
     // update line
     // var start = window.performance.now();
     string.attr('d', line(state));
     // t.text((window.performance.now() - start).toFixed(6));
+    t.text(Math.log10(wave.energy));
   });
 
   return wave;
