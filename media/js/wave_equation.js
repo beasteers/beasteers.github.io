@@ -6,11 +6,12 @@ var wave_equation = function(params) {
     rho: 3, // mass per unit length
     N: 40, // number of elements to model with
     L: 1, // length of string
-    FA: 500, // amplitude of max force
+    F0: 500, // amplitude of max force
 //     E: 0.1, // modulus of elasticity
 //     l0: 0.1, // static deflection
     // r_2: 0.07111111111111111,
-
+    minLogEnergy: 3,
+    speed_up: 1, // Yx the frame rate
     
     k: 0, // the index (0|1) for the current timestep in u_k in U
     state: function(){ return this.U[o.k]; },
@@ -31,12 +32,23 @@ var wave_equation = function(params) {
     },
     
     update: function(data){
-      Object.assign(this, data);
+      // change the model parameters
+      var o = Object.assign(this, data);
+      if(data.dt || data.speed_up) // dt has changed
+        this.stop().run() // restart with new dt
+
       // the distance between consecutive pts
       o.dx = o.L / o.N;
+      // 1st harmonic
+      o.nf = o.nfrequency();
       // courant number
-      o.r_2 = Math.min(0.9999, Math.pow(o.T0 / o.rho * o.dt / o.dx, 2));
+      o.r_2 = Math.max(0.0001, Math.min(Math.pow(o.T0 / o.rho * o.dt / o.dx, 2), 0.9999));
       return this;
+    },
+
+    array: function(){
+      // creates a blank array that's the size of the wave.
+      return new Array(this.N).fill(0);
     },
     
     next: function(){
@@ -45,17 +57,18 @@ var wave_equation = function(params) {
       var ukm1 = o.U[+!o.k]; // previous time step
 
       this.energy = 0;
+      this.update_forces()
       for(var n = 1; n < o.N - 1; n++){
         // update u_k+1
         this.U[+!o.k][n] = ( 
           2*(1 - o.r_2) * uk[n] + o.r_2 * (uk[n+1] + uk[n-1]) - // change due to the curvature of the string
          (1 - 2*o.beta*o.dt) * ukm1[n] + // relation to the last time step
-         o.FA*(o.net_force[n]) * Math.pow(o.dt, 2) // force added to the system
+         o.F0*(o.net_force[n]) * Math.pow(o.dt, 2) // force added to the system
         ) / (1 + 2*o.beta*o.dt); // decay
 
         this.energy += Math.pow(this.U[+!o.k][n], 2) + Math.pow((this.U[o.k][n] - this.U[+!o.k][n]) / o.dt, 2) / 2;
       }
-      if(Math.log10(this.energy) < 3)
+      if(Math.log10(this.energy) < this.minLogEnergy)
         this.stationary().stop();
 
       this.k  = +!o.k; // swaps the index between the two arrays
@@ -65,26 +78,58 @@ var wave_equation = function(params) {
 
     forces: {}, // stores an object of id => force with any 
     net_force: null, // 
+    force_generators: {},
     apply_force: function(id, force) {
       var o = this;
+      
+
+      var force_added = 0;
+
+      if(typeof force == 'number') // allow uniform force to be applied
+        force = o.array().fill(force);
+
+      if(typeof force === 'function'){
+        this.force_generators[id] = force; // save function to be called on update
+        force = force(); // run for the first time and put result in force
+      }
+      else if(id in this.force_generators) 
+        this.force_generators = null; // clear any old forcing functions
+
       // remove previous force from the net force
       var prev_force = this.forces[id];
       if(prev_force && prev_force.length == o.N)
         prev_force.forEach(function(f, i){
-          if(f) // ignore nans, nulls
+          if(f){ // ignore nans, nulls
             o.net_force[i] -= f;
+            force_added += f*f;
+          }
         });
 
       // add in new force
       if(force && force.length == o.N)
         force.forEach(function(f, i){
-          if(f) // ignore nans, nulls
+          if(f){ // ignore nans, nulls
             o.net_force[i] += f;
+            force_added += f*f;
+          }
         });
+
+      force_added = Math.sqrt(force_added) // sum of squares
+
       this.forces[id] = force; // register force under `id`
       if(force && !this.interval) // if stopped + new excitation, run
         this.run();
+
+      console.log('force applied', id, force_added, force);
       return this;
+    },
+
+    update_forces: function() {
+      for(var force_id in this.force_generators){
+        var force = this.force_generators[force_id];
+        if(force)
+          this.apply_force(force_id, force());
+      }
     },
 
     recalculate_net_force: function(){
@@ -104,6 +149,18 @@ var wave_equation = function(params) {
     pre_run: function(callback){
       this.pre_run_func = callback;
     },
+
+    // get_force_k: function(id, k=0){
+    //   if(!(id in this.forces)) 
+    //     return null;
+
+    //   return this.force[id][this.k_forces[id]];
+    // },
+
+    nfrequency: function(n, dt){
+      var o = this;
+      return 1 / (2*o.L) * Math.sqrt(o.T0 / o.rho) * o.speed_up;
+    },
     
     run_func: null, // runs the next step in function and passes to callback function 
     run: function(callback){
@@ -119,8 +176,9 @@ var wave_equation = function(params) {
         if(o.pre_run_func)
           o.pre_run_func(o.state(), o);
         o.callback(o.next(), o);
-      }, o.dt * 1000); // to ms
-      console.log('starting calculation')
+      }, 1000. * this.dt / this.speed_up); // s to ms
+      
+      console.log('starting calculation', 'fps: '+(1./this.dt * this.speed_up), 1000. * this.dt / this.speed_up)
       return this;
     },
 
@@ -133,25 +191,27 @@ var wave_equation = function(params) {
     },
 
     stationary: function(){
+      // freeze entire string position at u=0
+      this.U[+!o.k].fill(0);
       this.U[o.k].fill(0);
       return this;
     }
   };
   
   // initial conditions fx is initial position, gx is initial velocity
-  o.fx0 = o.fx0 || new Array(o.N).fill(0).map(function(d, i){
+  o.fx0 = o.fx0 || o.array().map(function(d, i){
     // default to a gaussian * 30cpL sin wave
     return gaussian(i, mu=10, sigma=20, amplitude=10) * Math.sin(30*2*Math.PI * i / o.N);
   });
-  o.gx0 = o.gx0 || new Array(o.N).fill(0);
+  o.gx0 = o.gx0 || o.array();
   
   // storage for u_k and u_k-1
   o.U = [
-    new Array(o.N).fill(0),
-    new Array(o.N).fill(0)
+    o.array(),
+    o.array()
   ];
 
-  o.net_force = new Array(o.N).fill(0);
+  o.net_force = o.array();
   
   return o.update(params || {}).init();
 }
@@ -216,9 +276,21 @@ function create_wave(selector, o, params){
     }, 100)
   });
 
-  wave.apply_force('gravity', -1);
+  // wave.apply_force('gravity', -20);
+  // wave.apply_force('upgravity', wave.array().map(function(d,i){return gaussian(i, wave.N / 3, 2, 10);}));
 
-  var t = d3.select('#banner header').append('p')
+  // var excitation = wave.array().map(function(d, i){
+  //   return gaussian(i, wave.N / 2, 0.5, 500);
+  // });
+  // console.log(excitation);
+  // setInterval(function(){
+  //   wave.apply_force('excitation', excitation);
+  //   setTimeout(function(){
+  //     wave.apply_force('excitation', null);
+  //   }, 100);
+  // }, 4000. / wave.nf);
+
+  // var t = d3.select('#banner header').append('p')
 
   wave.run(function(state){
     // update line
@@ -251,8 +323,45 @@ function softmin0(x, min=0, degree=1){
 }
 
 function gaussian(x, mu=0, sigma=1, amplitude=1){
-  return amplitude * Math.exp(-Math.pow((x - mu) / sigma, 2))
+  return amplitude * Math.exp(-Math.pow((x - mu) / sigma, 2));
+}
+
+function decay(t, halflife=0.5){
+  return Math.exp(-beta * t);
 }
 
 
+function transient(id, func, o) {
+  Object.assign(this, {
+    id: id,
+    min_time: null,
+    max_time: null, 
+    min_value: null,
+    max_value: null,
+    terminal_value: false,
+    halflife: null,
+
+    start_time: new Date.getTime(),
+
+    __run__: function(){
+      var dt = new Date.getTime() - this.start_time;
+      if(this.max_time && dt > this.max_time) // times up
+        this.kill();
+      
+      var value = func.apply(this, arguments);
+
+
+
+      if(!(this.min_time && new Date.getTime() - this.start_time < this.min_time)){ // enough time has passed
+        if(this.terminal_value && value == this.terminal_value || 
+          this.min_value && value <= this.min_value || 
+          this.max_value && value >= this.max_value) // check value thresholds
+          this.kill();
+      }
+    }, 
+
+
+
+  }, o);
+}
 

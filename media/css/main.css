@@ -1609,7 +1609,8 @@ button,
   text-align: center;
   text-decoration: none;
   text-transform: uppercase;
-  white-space: nowrap; }
+  white-space: nowrap;
+  margin: 0.3em 0.2em; }
   .tag:hover, .tag:active,
   input[type="submit"]:hover,
   input[type="submit"]:active,
@@ -1782,8 +1783,7 @@ button,
     opacity: 0.25; }
 
 .tag {
-  cursor: default;
-  margin: 0.3em 0.2em; }
+  cursor: default; }
 
 /* Tiles */
 .tiles.tiles-title {
