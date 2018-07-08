@@ -1,3 +1,5 @@
+var _2pi = 2 * Math.PI;
+
 var wave_equation = function(params) {
   var o = {
     beta: 1, // damping constant ish
@@ -80,20 +82,48 @@ var wave_equation = function(params) {
     net_force: null, // 
     force_generators: {},
     apply_force: function(id, force) {
-      var o = this;
-      
+      /*
+      Force can be:
+        a scalar: uniformly distributed force
+        a function: 
+          returns a new force array on every call
+          return null to end
+        a generator-like object: 
+          returns a new force array on obj.next()
+          stores result in obj.value
+          return null to end
+        null: removes this force
 
-      var force_added = 0;
+
+      */
+      var o = this;
+      var force_added = 0; // total force
+
+
+      if(typeof force === 'undefined'){ // force omitted, use previous value/generator
+        force = this.force_generators[id] || this.forces[id] || null;
+      }
+
+      // generator
+      if(typeof force === 'function'){
+        var force_value = force(); // run for the first time and put result in force
+        this.force_generators[id] = force_value != null ? force : null; // save function to be called on update
+        force = force_value;
+      }
+      else if(force && typeof force === 'object' && force.next){
+        this.force_generators[id] = force.next(); // run
+        force = (this.force_generators[id] && this.force_generators[id].value 
+                ? this.force_generators[id].value : null); // get value if it exists
+      }
+
 
       if(typeof force == 'number') // allow uniform force to be applied
         force = o.array().fill(force);
-
-      if(typeof force === 'function'){
-        this.force_generators[id] = force; // save function to be called on update
-        force = force(); // run for the first time and put result in force
+      
+      if(!force && id in this.force_generators){
+        this.force_generators[id] = null; // clear any old forcing functions
       }
-      else if(id in this.force_generators) 
-        this.force_generators = null; // clear any old forcing functions
+
 
       // remove previous force from the net force
       var prev_force = this.forces[id];
@@ -114,21 +144,23 @@ var wave_equation = function(params) {
           }
         });
 
-      force_added = Math.sqrt(force_added) // sum of squares
+      force_added = Math.sqrt(force_added); // sum of squared forces
 
       this.forces[id] = force; // register force under `id`
       if(force && !this.interval) // if stopped + new excitation, run
         this.run();
 
-      console.log('force applied', id, force_added, force);
+      // console.log('force applied', id, force_added, force);
       return this;
+    },
+
+    is_force_applied: function(id){
+      return this.forces[id];
     },
 
     update_forces: function() {
       for(var force_id in this.force_generators){
-        var force = this.force_generators[force_id];
-        if(force)
-          this.apply_force(force_id, force());
+        this.apply_force(force_id);
       }
     },
 
@@ -276,6 +308,21 @@ function create_wave(selector, o, params){
     }, 100)
   });
 
+  $(window).on('keydown', function(e){
+    var key = e.which - 48 || -1;
+    if(!wave.forces['modes']){
+      if(e.ctrlKey && e.altKey && key > 0 && key < 10){
+        gen_mode(key, key);
+      }
+      else
+        wave.apply_force('modes', null);
+    }
+    
+  }).on('keyup', function(e){
+    wave.apply_force('modes', null);
+  })
+
+
   // wave.apply_force('gravity', -20);
   // wave.apply_force('upgravity', wave.array().map(function(d,i){return gaussian(i, wave.N / 3, 2, 10);}));
 
@@ -291,6 +338,7 @@ function create_wave(selector, o, params){
   // }, 4000. / wave.nf);
 
   // var t = d3.select('#banner header').append('p')
+  
 
   wave.run(function(state){
     // update line
@@ -304,6 +352,18 @@ function create_wave(selector, o, params){
 }
 
 
+
+function gen_mode(n=1, A=1){
+  var x = wave.N / 2. - ((n + 1) % 2) * wave.N / (n + 1) / 2;
+  var gen = transient(force=wave.array().map(function(d, i){
+    return A*gaussian(i, x, 3, 100);
+  }), time=function(i){
+    return Math.sin(this.f* _2pi * (i+1) * wave.dt)
+  }, {});
+  console.log(x, wave.N, gen._force_vector)
+  gen.f = n*2.5 / (2*wave.L) * Math.sqrt(wave.T0 / wave.rho);
+  wave.apply_force('modes', gen);
+}
 
 
 function softmax(x, max=0, degree=1){
@@ -326,42 +386,78 @@ function gaussian(x, mu=0, sigma=1, amplitude=1){
   return amplitude * Math.exp(-Math.pow((x - mu) / sigma, 2));
 }
 
-function decay(t, halflife=0.5){
-  return Math.exp(-beta * t);
+function expDecay(t, halflife=0.5){
+  return Math.exp(-halflife * t);
 }
 
 
-function transient(id, func, o) {
-  Object.assign(this, {
-    id: id,
+function transient(force, time, o) {
+  return Object.assign({
+    // id: id,
     min_time: null,
     max_time: null, 
     min_value: null,
     max_value: null,
     terminal_value: false,
-    halflife: null,
 
-    start_time: new Date.getTime(),
+    start_time: new Date().getTime(),
 
-    __run__: function(){
-      var dt = new Date.getTime() - this.start_time;
+    init: function(force, time){
+      if(typeof force == 'function')
+        this.get_force = force;
+      else
+        this._force_vector = force;
+      if(typeof time == 'function')
+        this.get_time = time;
+      else
+        this._time_vector = time;
+      return this;
+    },
+
+    i_force: 0,
+    _force_vector: null,
+    get_force: function(i){
+      return this._force_vector;
+      // (this._force_vector && this._force_vector.length < i 
+      //       ? this._force_vector[i] : null);
+    },
+
+    i_time: 0,
+    _time_vector: null,
+    get_time: function(i){
+      return (this._time_vector && this._time_vector.length < i 
+            ? this._time_vector[i] : null);
+    },
+
+
+    next: function(){
+      var dt = new Date().getTime() - this.start_time;
       if(this.max_time && dt > this.max_time) // times up
-        this.kill();
+        return null; // ends execution, removes force
       
-      var value = func.apply(this, arguments);
+
+      // var value = func.apply(this, arguments);
+      var force = this.get_force(this.i_force++); // need to get wave object somehow
+      var time = this.get_time(this.i_time++);
+
+      this.value = force.map(function(f){ return f*time; })
 
 
-
-      if(!(this.min_time && new Date.getTime() - this.start_time < this.min_time)){ // enough time has passed
+      if(!(this.min_time && new Date().getTime() - this.start_time < this.min_time)){ // has enough time passed to stop
         if(this.terminal_value && value == this.terminal_value || 
           this.min_value && value <= this.min_value || 
           this.max_value && value >= this.max_value) // check value thresholds
-          this.kill();
+          return null; // removes force
       }
+      return this;
     }, 
-
-
-
-  }, o);
+  }, o).init(force, time, o);
 }
+
+
+
+
+
+
+
 
