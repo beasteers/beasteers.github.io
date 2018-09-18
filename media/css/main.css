@@ -1484,7 +1484,8 @@ ul {
     padding-left: 0; }
     ul.icons li {
       display: inline-block;
-      padding: 0 1em 0 0; }
+      padding: 0 1em 0 0;
+      vertical-align: middle; }
       ul.icons li:last-child {
         padding-right: 0; }
     @media screen and (max-width: 736px) {
@@ -2262,10 +2263,8 @@ button,
   background-size: cover;
   border-bottom: 0 !important;
   cursor: default;
-  height: 60vh;
+  min-height: 60vh;
   margin-bottom: -3.25em;
-  max-height: 32em;
-  min-height: 22em;
   position: relative;
   top: -3.25em; }
   #banner:after {
